@@ -183,12 +183,12 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: HrColors.navy },
   bgTop: {
-    ...StyleSheet.absoluteFillObject,
+    top: 0, right: 0, left: 0,
     backgroundColor: HrColors.navy,
     bottom: '50%',
   },
   bgBottom: {
-    ...StyleSheet.absoluteFillObject,
+    right: 0, bottom: 0, left: 0,
     backgroundColor: HrColors.canvas,
     top: '50%',
   },

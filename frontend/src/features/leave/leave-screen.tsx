@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   Modal,
   Platform,
   Pressable,
@@ -72,6 +73,7 @@ export function LeaveScreen() {
   const [form, setForm] = useState<FormState>(DEFAULT_FORM);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [editingLeave, setEditingLeave] = useState<LeaveRequest | null>(null);
 
   // Load real data when session available
   useEffect(() => {
@@ -111,8 +113,13 @@ export function LeaveScreen() {
         reason: form.reason.trim(),
       };
       if (session?.token) {
-        const created = await hrApi.createLeaveRequest(session.token, payload);
-        setRequests((prev) => [created, ...prev]);
+        if (editingLeave) {
+          const updated = await hrApi.updateLeaveRequest(session.token, editingLeave.leave_id, payload);
+          setRequests((prev) => prev.map((item) => item.leave_id === updated.leave_id ? updated : item));
+        } else {
+          const created = await hrApi.createLeaveRequest(session.token, payload);
+          setRequests((prev) => [created, ...prev]);
+        }
       } else {
         // Offline demo
         const demo: LeaveRequest = {
@@ -140,7 +147,20 @@ export function LeaveScreen() {
     } finally {
       setSubmitting(false);
     }
-  }, [form, session, requests]);
+  }, [form, session, requests, editingLeave]);
+
+  const cancelRequest = (request: LeaveRequest) => {
+    if (!session?.token) return;
+    Alert.alert('ยกเลิกคำขอลา', 'ต้องการยกเลิกคำขอนี้หรือไม่', [
+      { text: 'ไม่ใช่', style: 'cancel' },
+      { text: 'ยืนยัน', style: 'destructive', onPress: async () => {
+        try {
+          const updated = await hrApi.cancelLeaveRequest(session.token, request.leave_id);
+          setRequests((prev) => prev.map((item) => item.leave_id === updated.leave_id ? updated : item));
+        } catch (err) { setFormError(err instanceof Error ? err.message : 'ยกเลิกคำขอไม่สำเร็จ'); }
+      } },
+    ]);
+  };
 
   return (
     <HrScreen
@@ -150,7 +170,7 @@ export function LeaveScreen() {
       action={
         <Pressable
           style={({ pressed }) => [styles.addButton, pressed && styles.addButtonPressed]}
-          onPress={() => { setForm(DEFAULT_FORM); setFormError(null); setShowForm(true); }}
+          onPress={() => { setEditingLeave(null); setForm(DEFAULT_FORM); setFormError(null); setShowForm(true); }}
         >
           <Ionicons name="add" size={18} color="#fff" />
           <Text style={styles.addText}>ยื่นคำขอ</Text>
@@ -197,6 +217,12 @@ export function LeaveScreen() {
               </View>
               <Text style={styles.reason}>{req.reason}</Text>
               <Text style={styles.reqId}>{req.leave_id}</Text>
+              {req.status === 'pending' && (
+                <View style={styles.requestActions}>
+                  <Pressable style={styles.secondaryAction} onPress={() => { setEditingLeave(req); setForm({ leaveType: (LEAVE_TYPES.includes(req.leave_type as LeaveType) ? req.leave_type : 'ลากิจ') as LeaveType, startDate: req.start_date.slice(0, 10), endDate: req.end_date.slice(0, 10), reason: req.reason }); setFormError(null); setShowForm(true); }}><Text style={styles.secondaryActionText}>แก้ไข</Text></Pressable>
+                  <Pressable style={styles.cancelAction} onPress={() => cancelRequest(req)}><Text style={styles.cancelActionText}>ยกเลิกคำขอ</Text></Pressable>
+                </View>
+              )}
             </SectionCard>
           ))}
         </View>
@@ -214,7 +240,7 @@ export function LeaveScreen() {
             {/* Handle */}
             <View style={styles.modalHandle} />
             <ScrollView showsVerticalScrollIndicator={false}>
-              <Text style={styles.modalTitle}>ยื่นคำขอลางาน</Text>
+              <Text style={styles.modalTitle}>{editingLeave ? 'แก้ไขคำขอลางาน' : 'ยื่นคำขอลางาน'}</Text>
 
               {formError ? (
                 <View style={styles.formError}>
@@ -354,6 +380,11 @@ const styles = StyleSheet.create({
   reqDate: { color: HrColors.muted, fontSize: HrFont.xs },
   reason: { color: HrColors.muted, fontSize: HrFont.sm, marginTop: 10, lineHeight: 20 },
   reqId: { color: HrColors.mutedLight, fontSize: HrFont.xs, marginTop: 6, fontWeight: '600' },
+  requestActions: { flexDirection: 'row', gap: 8, marginTop: 12 },
+  secondaryAction: { borderWidth: 1, borderColor: HrColors.blue, borderRadius: HrRadius.sm, paddingHorizontal: 12, paddingVertical: 7 },
+  secondaryActionText: { color: HrColors.blue, fontSize: HrFont.xs, fontWeight: '700' },
+  cancelAction: { borderWidth: 1, borderColor: HrColors.red, borderRadius: HrRadius.sm, paddingHorizontal: 12, paddingVertical: 7 },
+  cancelActionText: { color: HrColors.red, fontSize: HrFont.xs, fontWeight: '700' },
 
   modalLayer: {
     flex: 1,

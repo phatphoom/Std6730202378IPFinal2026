@@ -76,7 +76,6 @@ function EmployeeCard({ emp, index }: { emp: Employee; index: number }) {
             {emp.status && (
               <StatusBadge
                 status={emp.status === 'active' ? 'approved' : 'cancelled'}
-                label={emp.status === 'active' ? 'ปฏิบัติงาน' : 'พักงาน'}
               />
             )}
           </View>

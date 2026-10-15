@@ -5,6 +5,7 @@ export type Employee = {
   first_name: string;
   last_name: string;
   email: string;
+  department_id?: string | null;
   department_name: string;
   position: string;
   salary?: number | string;
@@ -12,6 +13,15 @@ export type Employee = {
   status?: 'active' | 'inactive';
   role: UserRole;
   start_date?: string;
+};
+
+export type Department = {
+  department_id: string;
+  name: string;
+  code: string;
+  manager_employee_id?: string | null;
+  manager_name?: string | null;
+  employee_count?: number;
 };
 
 export type LeaveStatus = 'pending' | 'approved' | 'rejected' | 'cancelled';

@@ -12,6 +12,7 @@ const TAB_ICONS: Record<string, { active: IconName; inactive: IconName }> = {
   leave: { active: 'calendar', inactive: 'calendar-outline' },
   employees: { active: 'people', inactive: 'people-outline' },
   profile: { active: 'person-circle', inactive: 'person-circle-outline' },
+  management: { active: 'settings', inactive: 'settings-outline' },
 };
 
 export default function TabsLayout() {
@@ -46,6 +47,7 @@ export default function TabsLayout() {
       <Tabs.Screen name="leave" options={{ title: 'ลางาน' }} />
       <Tabs.Screen name="employees" options={{ title: 'ทีม' }} />
       <Tabs.Screen name="profile" options={{ title: 'โปรไฟล์' }} />
+      <Tabs.Screen name="management" options={{ title: 'จัดการ' }} />
     </Tabs>
   );
 }
